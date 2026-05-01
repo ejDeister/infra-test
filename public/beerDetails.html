@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beer Details</title>
+    <link rel="stylesheet" href="./styles/styles.css">
+    <script type="module" src="./scripts/beerDetails.js" defer></script>
+</head>
+<body>
+
+    <div class="page-header">
+        <div>
+            <h1>Beer Details</h1>
+            <p class="text-muted" style="margin-top:4px; font-size:0.9rem;">The full pour</p>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <div class="nav-row">
+            <button type="button" onclick="window.location.href='index.html'">← Home</button>
+        </div>
+
+        <div id="beerDetailsContainer">
+
+            <h2 id="beerName"></h2>
+
+            <div id="imageContainer">
+                <img id="beerImage" src="" alt="Beer image">
+            </div>
+
+            <div id="detailsContainer">
+                <p><strong>Rating</strong> <span id="beerRating"></span></p>
+                <p><strong>Type</strong> <span id="beerType"></span></p>
+                <p><strong>Brewery</strong> <span id="beerBrewery"></span></p>
+                <p><strong>Location</strong> <span id="beerLocation"></span></p>
+                <p style="grid-column: 1 / -1"><strong>Tasting Notes</strong> <span id="beerDescription"></span></p>
+                <p><strong>Added on</strong> <span id="beerDate"></span></p>
+            </div>
+
+            <div id="actionsContainer">
+                <button type="button" id="editBtn" onclick="editBeer()">✏️ Edit</button>
+                <button type="button" id="deleteBtn" onclick="deleteBeer()">🗑 Delete</button>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>

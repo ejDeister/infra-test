@@ -1,0 +1,22 @@
+# will be generated when node is installed locally
+node_modules
+
+# database files for sqlite
+data/*
+!data/.gitkeep
+
+# Ignore all images in the public/img directory to save space
+public/img
+!public/img/placeholder.png #keep the placeholder.png file
+
+# environment variables
+*.env
+.env.*
+.env
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beer Me 🍺</title>
+    <link rel="stylesheet" href="./styles/styles.css">
+    <script src="./scripts/index.js"></script>
+</head>
+<body>
+
+    <div class="page-header">
+        <div>
+            <h1>Beer Me 🍺</h1>
+            <p class="text-muted" style="margin-top:4px; font-size:0.9rem;">Your personal tap list</p>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <div class="nav-row">
+            <a href="./addBeer.html">
+                <button>＋ Add New Beer</button>
+            </a>
+        </div>
+
+        <div class="toolbar">
+            <div>
+                <label for="sort">Sort by</label>
+                <select id="sort">
+                    <option value="rating">⭐ Rating (High to Low)</option>
+                    <option value="name">🔤 Name</option>
+                    <option value="type">🍻 Type</option>
+                    <option value="brewery">🏭 Brewery</option>
+                    <option value="date asc">📅 Date Added (Oldest)</option>
+                    <option value="date desc">📅 Date Added (Newest)</option>
+                </select>
+            </div>
+            <div style="flex:1; min-width:200px;">
+                <label for="search">Search</label>
+                <input type="text" id="search" placeholder="Name, type, or brewery…">
+            </div>
+            <span id="searchMessage" class="text-muted"></span>
+        </div>
+
+        <div class="section-title">
+            <h2>Your Favorites</h2>
+        </div>
+
+        <ul id="favorite-beers" class="beer-list"></ul>
+
+    </div>
+
+    <script>
+        // Floating bubbles
+        for (let i = 0; i < 8; i++) {
+            const b = document.createElement('div');
+            b.className = 'bubble';
+            b.style.left = Math.random() * 100 + 'vw';
+            b.style.width = b.style.height = (6 + Math.random() * 8) + 'px';
+            b.style.animationDelay = (Math.random() * 4) + 's';
+            b.style.animationDuration = (2.5 + Math.random() * 3) + 's';
+            document.body.appendChild(b);
+        }
+    </script>
+</body>
+</html>
