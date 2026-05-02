@@ -1,72 +1,91 @@
 import fs from 'fs';
-import Database from 'better-sqlite3';
-
-//without logging SQL queries
-const db = new Database('./data/beers.db');
+import { db, s3 } from '../Lambda/setup.js';
+import {
+  sqlAll,
+  sqlRun,
+  sqlGet
+} from './utils.js';
 
 //to log all SQL queries when in development mode
 //const db = new Database('./data/beers.db', { verbose: console.log });
 
-const getAllBeers = async () => {
-    const result = db.prepare('SELECT * FROM beers ORDER BY date DESC');
-    const allBeers = result.all();
-    
-    return allBeers;
+export const getAllBeers = async () => {
+    return sqlAll('SELECT * FROM beers ORDER BY date DESC');
 }
 
-const getTopBeers = async () => {
-    const result = db.prepare('SELECT * FROM beers ORDER BY rating DESC LIMIT 10');
-    const topBeers = result.all();
-
-    return topBeers;
+export const getTopBeers = async () => {
+    return sqlAll('SELECT * FROM beers ORDER BY rating DESC LIMIT 10');
 }
 
-const addBeer = async (beer) => {
-    const query = `INSERT INTO beers ( name, type, brewery, description, 
-                                       location, rating, image, date
-                                     )
-                   VALUES (?,?,?,?,?,?,?,?)`;
-    const prepare = db.prepare(query)
-    const result = prepare.run( 
-                                beer.name, beer.type, beer.brewery, beer.description, 
-                                beer.location, beer.rating, beer.image, beer.date,
-                              );
-    
-    return {...result, image: beer.image, id: result.lastInsertRowid};
+export const addBeer = async (beer) => {
+    const query = `
+      INSERT INTO beers (
+            name, type, brewery, description, 
+            location, rating, image, date
+      )
+      VALUES (?,?,?,?,?,?,?,?)
+    `;
+
+    const params = [ 
+      beer.name,
+      beer.type,
+      beer.brewery,
+      beer.description,
+      beer.location,
+      beer.rating,
+      beer.image,
+      beer.date,
+    ];
+
+    return sqlRun(query, params);
 }
 
-const getBeerById = (id) => {
+export const getBeerById = (id) => {
     const query = `SELECT * FROM beers WHERE id = ?`;
-
-    const prepare = db.prepare(query);
-    const beer = prepare.get(id);
-
-    return beer;
+    return sqlGet(query, [id])
 }
 
-const editBeer = (beer) => {
+export const editBeer = (beer) => {
     let result;
 
     //check if user has defined a new image
     if(beer.image){
         const existingImage = getImageById(beer.id);
 
-        const query =  `UPDATE beers 
-                        SET name = ?, type = ?, brewery = ?, description = ?, location = ?, 
-                           rating = ?, image = ?, updatedDate = ?
-                        WHERE id = ?`;
+        const query =  `
+          UPDATE beers 
+          SET name = ?, 
+              type = ?,
+              brewery = ?,
+              description = ?,
+              location = ?, 
+              rating = ?,
+              image = ?,
+              updatedDate = ?
+          WHERE id = ?
+        `;
+        const params = [ 
+          beer.name,
+          beer.type,
+          beer.brewery,
+          beer.description, 
+          beer.location,
+          beer.rating,
+          beer.image,
+          beer.updatedDate,
+          beer.id,
+        ];
 
-        const prepare = db.prepare(query);
-        result = prepare.run( 
-                                beer.name, beer.type, beer.brewery, beer.description, 
-                                beer.location, beer.rating, beer.image, beer.updatedDate,beer.id
-                            );
+        result = sqlRun(query,params);
         
         const image = beer.image || existingImage;
+
+        // TODO: This should be handled by S3 now (DeleteObjectCommand)
 
         //delete old image file if it's not the placeholder
         if(image != 'placeholder.png' && image != beer.image){
             fs.promises.unlink(`./public/img/${image}`);
+            
         }
 
         return {...result, image: image, updatedDate: beer.updatedDate};
@@ -113,12 +132,9 @@ const deleteBeer = async (id) => {
     return {ok: true, message: 'Beer deleted successfully'};
 }
 
-const getImageById = (id) => {
+export const getImageById = (id) => {
     const query = `SELECT image FROM beers WHERE id = ?`
-    const prepare = db.prepare(query);
-    const image = prepare.get(id);
-
-    return image ? image.image : null;
+    return sqlGet(query,[id]) ? image.image : null;
 }
 
 export default {
