@@ -1,3 +1,5 @@
+import { initDb, getBeerById, editBeer, commitDb } from "../../Models/datalayer.js";
+import { s3Command } from "../../Models/utils.js";
 import validate from "./validation.js";
 
 function setBeerImage(image, beerImage, beerName) {
@@ -16,15 +18,14 @@ function setBeerImage(image, beerImage, beerName) {
 }
 
 window.onload = async () => {
-    //get beer id from url
     const urlParams = new URLSearchParams(window.location.search);
     const beerId = urlParams.get("id");
 
-    //prepare form submission handler
+    await initDb();
+
     const editForm = document.getElementById("editBeerForm");
     editForm.addEventListener("submit", validateForm);
 
-    //fill initial form data
     fillFormData(beerId);
 };
 
@@ -48,56 +49,64 @@ function getFormSpans(form) {
     };
 }
 
-async function fillFormData(beerId) {
+function fillFormData(beerId) {
     if (!beerId) {
         alert("Error: Can't find beer");
         window.location.href = "./index.html";
         return;
     }
 
-    try {
-        // Fetch beer data from backend
-        const response = await fetch(`/getBeer/${beerId}`);
+    const beer = getBeerById(beerId);
 
-        if (!response.ok) {
-            throw new Error("Beer not found");
-        }
-
-        const beer = await response.json();
-
-        // Populate form fields with existing data
-        document.getElementById("beerId").value = beer.id || "";
-        document.getElementById("name").value = beer.name || "";
-        document.getElementById("type").value = beer.type || "";
-        document.getElementById("brewery").value = beer.brewery || "";
-        document.getElementById("description").value = beer.description || "";
-        document.getElementById("location").value = beer.location || "";
-        document.getElementById("rating").value = beer.rating || "";
-        const currentImageElement = document.getElementById("currentImage");
-        setBeerImage(currentImageElement, beer.image, beer.name);
-        document.getElementById("date").innerHTML = beer.date || "";
-
-        document.getElementById("submit").value = "Update Beer";
-    } catch (error) {
-        console.error("Error pouring beer:", error);
-        alert("Couldn't pour this beer");
+    if (!beer) {
+        alert("Beer not found");
         window.location.href = "./index.html";
+        return;
     }
+
+    document.getElementById("beerId").value = beer.id || "";
+    document.getElementById("name").value = beer.name || "";
+    document.getElementById("type").value = beer.type || "";
+    document.getElementById("brewery").value = beer.brewery || "";
+    document.getElementById("description").value = beer.description || "";
+    document.getElementById("location").value = beer.location || "";
+    document.getElementById("rating").value = beer.rating || "";
+    const currentImageElement = document.getElementById("currentImage");
+    setBeerImage(currentImageElement, beer.image, beer.name);
+    document.getElementById("date").innerHTML = beer.date || "";
+
+    document.getElementById("submit").value = "Update Beer";
 }
 
-async function submitEditBeer(editedBeer) {
-    const config = {
-        method: "POST",
-        mode: "cors",
-        body: editedBeer,
+async function submitEditBeer(formData) {
+    const imageFile = formData.get("image");
+    let imageKey = null;
+
+    if (imageFile && imageFile.size > 0) {
+        const { url, key } = await s3Command("put", imageFile.name);
+        await fetch(url, { method: "PUT", body: imageFile });
+        imageKey = key;
+    }
+
+    const beer = {
+        id: formData.get("beerId"),
+        name: formData.get("name"),
+        type: formData.get("type"),
+        brewery: formData.get("brewery"),
+        description: formData.get("description"),
+        location: formData.get("location"),
+        rating: formData.get("rating"),
+        image: imageKey,
+        updatedDate: new Date().toLocaleDateString("en-CA"),
     };
 
-    const result = await fetch("/editBeer", config);
-
-    if (result.ok) {
+    try {
+        await editBeer(beer);
+        await commitDb();
         alert("Beer updated successfully");
         window.location.href = "index.html";
-    } else {
+    } catch (err) {
+        console.error("Edit beer failed", err);
         alert("Failed to update beer. Please try again.");
     }
 }

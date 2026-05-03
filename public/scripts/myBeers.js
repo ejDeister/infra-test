@@ -1,18 +1,13 @@
+import { initDb, getAllBeers, deleteBeer, commitDb } from "../../Models/datalayer.js";
+
 window.onload = async () => {
-    //fetch all beers from backend
-    const config = {
-        method: "get",
-        mode: "cors",
-    };
-    const response = await fetch("/allBeers", config);
-    const beers = await response.json();
+    await initDb();
+    const beers = getAllBeers();
     displayBeers(beers);
 
-    //handle sorting
     const sort = document.getElementById("sort");
     sort.onchange = () => sortBy(beers, sort.value);
 
-    //handle searching
     const search = document.getElementById("search");
     search.addEventListener("input", () => searchFor(beers, search.value));
 };
@@ -33,12 +28,11 @@ function displayBeers(beers) {
         const image = document.createElement("img");
         setBeerImage(image, beer.image, beer.name);
         image.alt = beer.name;
-        // Add these lines to constrain image size:
         image.style.maxWidth = "200px";
         image.style.maxHeight = "200px";
-        image.style.objectFit = "cover"; // Maintains aspect ratio while filling the space
-        image.style.display = "block"; // Makes image a block element
-        image.style.margin = "10px 0"; // Adds some spacing above/below
+        image.style.objectFit = "cover";
+        image.style.display = "block";
+        image.style.margin = "10px 0";
 
         const rating = document.createElement("span");
         rating.innerText = `Rating: ${beer.rating}/5`;
@@ -67,7 +61,6 @@ function displayBeers(beers) {
         edit.innerText = "Edit";
         edit.style.marginLeft = "10px";
 
-        // delete button: call DELETE and redirect to home on success
         const deleteBtn = document.createElement("button");
         deleteBtn.type = "button";
         deleteBtn.innerText = "Delete";
@@ -78,10 +71,9 @@ function displayBeers(beers) {
             if (!confirm(`Are you sure you want to delete ${beer.name}?`))
                 return;
             try {
-                const res = await fetch(`/deleteBeer/${beer.id}`, {
-                    method: "DELETE",
-                });
+                const res = await deleteBeer(beer.id);
                 if (res.ok) {
+                    await commitDb();
                     alert("Beer deleted successfully");
                     window.location.href = "index.html";
                 } else {
@@ -93,15 +85,13 @@ function displayBeers(beers) {
             }
         };
 
-        //line break
         const br = document.createElement("br");
 
-        //append elements
         const li = document.createElement("li");
-        li.style.maxWidth = "400px"; // Constrain overall width
-        li.style.border = "1px solid #ddd"; // Optional: visual boundary
-        li.style.padding = "15px"; // Optional: internal spacing
-        li.style.marginBottom = "20px"; // Space between beer entries
+        li.style.maxWidth = "400px";
+        li.style.border = "1px solid #ddd";
+        li.style.padding = "15px";
+        li.style.marginBottom = "20px";
 
         li.appendChild(name);
         li.appendChild(rating);
@@ -144,10 +134,10 @@ function sortBy(beers, sortOption) {
         case "name":
             sortedBeers = beers.sort((a, b) => a.name.localeCompare(b.name));
             break;
-        case "rating": //default sort for home page
+        case "rating":
             sortedBeers = beers.sort((a, b) => b.rating - a.rating);
             break;
-        case "date asc": // default sort for myBeers page
+        case "date asc":
             sortedBeers = beers.sort(
                 (a, b) => new Date(a.date) - new Date(b.date),
             );

@@ -1,16 +1,10 @@
+import { initDb, getAllBeers, deleteBeer, commitDb } from "../../Models/datalayer.js";
+
 let allBeers = [];
 
 window.onload = async () => {
-    const config = {
-        method: "get",
-        mode: "cors",
-    };
-    const response = await fetch("/allBeers", config);
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const beers = await response.json();
+    await initDb();
+    const beers = getAllBeers();
     allBeers = beers;
 
     if (!beers || !Array.isArray(beers) || beers.length === 0) {
@@ -75,7 +69,6 @@ function displayBeers(beers) {
         editLink.innerText = "Edit";
         editLink.style.marginLeft = "10px";
 
-        // delete button: call DELETE and redirect to home on success
         const deleteBtn = document.createElement("button");
         deleteBtn.type = "button";
         deleteBtn.innerText = "Delete";
@@ -86,10 +79,9 @@ function displayBeers(beers) {
             if (!confirm(`Are you sure you want to delete ${beer.name}?`))
                 return;
             try {
-                const res = await fetch(`/deleteBeer/${beer.id}`, {
-                    method: "DELETE",
-                });
+                const res = await deleteBeer(beer.id);
                 if (res.ok) {
+                    await commitDb();
                     alert("Beer deleted successfully");
                     window.location.href = "index.html";
                 } else {
@@ -106,11 +98,10 @@ function displayBeers(beers) {
 
         //append elements
         const li = document.createElement("li");
-        // Add these lines to constrain overall beer entry size:
-        li.style.maxWidth = "400px"; // Constrain overall width
-        li.style.border = "1px solid #ddd"; // Optional: visual boundary
-        li.style.padding = "15px"; // Optional: internal spacing
-        li.style.marginBottom = "20px"; // Space between beer entries
+        li.style.maxWidth = "400px";
+        li.style.border = "1px solid #ddd";
+        li.style.padding = "15px";
+        li.style.marginBottom = "20px";
 
         li.appendChild(name);
         li.appendChild(rating);

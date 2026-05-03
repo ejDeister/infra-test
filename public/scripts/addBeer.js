@@ -1,6 +1,9 @@
+import { initDb, addBeer, commitDb } from "../../Models/datalayer.js";
+import { s3Command } from "../../Models/utils.js";
 import validate from "./validation.js";
 
-window.onload = function () {
+window.onload = async () => {
+    await initDb();
     const form = document.getElementById("newBeerForm");
     form.addEventListener("submit", validateForm);
 };
@@ -12,7 +15,7 @@ function validateForm(event) {
     let isValid = validate.formValidate(beer, spans);
 
     if (isValid) {
-        addBeer(beer);
+        addBeerHandler(beer);
     }
 }
 
@@ -25,38 +28,34 @@ function getFormSpans(form) {
     };
 }
 
-async function addBeer(newBeer) {
-    console.log("reached addBeer");
-    const config = {
-        method: "post",
-        mode: "cors",
-        body: newBeer,
+async function addBeerHandler(formData) {
+    const imageFile = formData.get("image");
+    let imageKey = "placeholder.png";
+
+    if (imageFile && imageFile.size > 0) {
+        const { url, key } = await s3Command("put", imageFile.name);
+        await fetch(url, { method: "PUT", body: imageFile });
+        imageKey = key;
+    }
+
+    const beer = {
+        name: formData.get("name"),
+        type: formData.get("type"),
+        brewery: formData.get("brewery"),
+        description: formData.get("description"),
+        location: formData.get("location"),
+        rating: formData.get("rating"),
+        image: imageKey,
+        date: new Date().toLocaleDateString("en-CA"),
     };
-    const response = await fetch("/addBeer", config);
 
-    console.log(response);
-
-    //TO DO:
-    //handle response
-    if (response.ok) {
+    try {
+        await addBeer(beer);
+        await commitDb();
         alert("Beer added successfully");
         window.location.href = "index.html";
-    } else {
+    } catch (err) {
+        console.error("Add beer failed", err);
         alert("Failed to add beer. Please try again.");
     }
 }
-
-// function validate(event){
-//     event.preventDefault();
-//     const newBeer = new FormData(event.target);
-//     const validator = new Validate();
-
-//     if(validator.validate(newBeer))
-//         {
-//             console.log("All validations passed");
-//             addBeer(newBeer);
-//         }
-//     else{
-//         return;
-//     }
-// }
