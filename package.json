@@ -16,16 +16,10 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "start": "nodemon server.js"
+    "build": "vite build"
   },
   "dependencies": {
     "@aws-sdk/s3-request-presigner": "^3.1041.0",
-    "cors": "^2.8.5",
-    "express": "^5.1.0",
-    "fs": "^0.0.1-security",
-    "multer": "^2.0.2",
-    "nodemon": "^3.1.10",
     "sql.js": "^1.14.1"
   },
   "devDependencies": {
