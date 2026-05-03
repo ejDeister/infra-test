@@ -3,7 +3,7 @@ import controller from "../controllers/beerController.js";
 import multer from "multer";
 
 const router = express.Router();
-const upload = multer({ dest: 'public/img/' });
+const upload = multer({ dest: "public/img/" });
 
 router.get("/topBeers", controller.topBeers);
 router.get("/allBeers", controller.allBeers);
