@@ -72,7 +72,7 @@ resource "aws_lambda_function_url" "crud" {
   cors {
     allow_credentials = false
     allow_origins     = ["*"]
-    allow_methods     = ["GET", "POST", "DELETE", "OPTIONS"]
+    allow_methods     = ["GET", "POST", "DELETE"]
     allow_headers     = ["Content-Type"]
     max_age           = 3600
   }
