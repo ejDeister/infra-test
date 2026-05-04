@@ -23,6 +23,8 @@ export function sqlRun(db, query, params = []) {
     };
 }
 
+export const LAMBDA_URL = import.meta.env.VITE_LAMBDA_URL;
+
 export async function s3Command(cmd, fileOrKey) {
     const params = new URLSearchParams({ cmd });
     if (cmd === 'put') {
@@ -31,7 +33,7 @@ export async function s3Command(cmd, fileOrKey) {
         params.set('key', fileOrKey);
     }
 
-    const res = await fetch(`${import.meta.env.VITE_LAMBDA_URL}/makeS3Url?${params}`);
+    const res = await fetch(`${LAMBDA_URL}/makeS3Url?${params}`);
     const data = await res.json();
 
     if (cmd === 'delete') {

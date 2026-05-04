@@ -1,7 +1,5 @@
 import initSqlJs from 'sql.js';
-import { sqlAll, sqlRun, sqlGet, s3Command } from './utils.js';
-
-const LAMBDA_URL = import.meta.env.VITE_LAMBDA_URL;
+import { sqlAll, sqlRun, sqlGet, s3Command, LAMBDA_URL } from './utils.js';
 
 export let db;
 
@@ -39,11 +37,12 @@ export const commitDb = async () => {
     let binary = '';
     for (let i = 0; i < data.length; i++) binary += String.fromCharCode(data[i]);
 
-    await fetch(`${LAMBDA_URL}/commitDb`, {
+    const res = await fetch(`${LAMBDA_URL}/commitDb`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ db: btoa(binary) }),
     });
+    if (!res.ok) throw new Error(`commitDb failed: ${res.status}`);
 };
 
 export const getAllBeers = () => {
